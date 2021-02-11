@@ -57,3 +57,28 @@ object Collections {
     iter(s.reverse, Nil)
   }
 }
+
+object LeetCode {
+
+  def runningSum(nums: Array[Int]): Array[Int] = {
+    nums.tail.scanLeft(nums.head)(_ + _)
+  }
+
+  def shuffle(nums: Array[Int], n: Int): Array[Int] = {
+    val (firstHalf, secondHalf) = nums splitAt n
+    (firstHalf zip secondHalf).flatMap { case (x, y) => Array(x, y) }
+  }
+
+  def maximumWealth(accounts: Array[Array[Int]]): Int = {
+    accounts.map(_.sum).max
+  }
+
+  def kidsWithCandies(candies: Array[Int], extraCandies: Int): Array[Boolean] = {
+    val greatest = candies.max
+    candies.map(_ + extraCandies >= greatest)
+  }
+
+  def maxWidthOfVerticalArea(points: Array[Array[Int]]): Int = {
+    points.map(_(0)).sorted.sliding(2).map { case Array(x, y) => y - x }.max
+  }
+}
