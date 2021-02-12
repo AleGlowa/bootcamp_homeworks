@@ -81,4 +81,11 @@ object LeetCode {
   def maxWidthOfVerticalArea(points: Array[Array[Int]]): Int = {
     points.map(_(0)).sorted.sliding(2).map { case Array(x, y) => y - x }.max
   }
+
+  def maxDepth(s: String): Int =
+    s.foldLeft(List(0)) { (acc, ch) =>
+      if (ch == '(') (acc.head + 1) :: acc
+      else if (ch == ')') (acc.head - 1) :: acc
+      else acc
+    }.max
 }
