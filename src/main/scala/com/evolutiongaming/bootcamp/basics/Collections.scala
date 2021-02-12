@@ -88,4 +88,11 @@ object LeetCode {
       else if (ch == ')') (acc.head - 1) :: acc
       else acc
     }.max
+
+  def balancedStringSplit(s: String): Int =
+    s.foldLeft(List(0)) { (acc, ch) =>
+      if (ch == 'R') (acc.head + 1) :: acc
+      else if (ch == 'L') (acc.head - 1) :: acc
+      else acc
+    }.count(_ == 0) - 1
 }
