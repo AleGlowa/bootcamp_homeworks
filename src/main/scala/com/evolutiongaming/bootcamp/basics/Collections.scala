@@ -95,4 +95,19 @@ object LeetCode {
       else if (ch == 'L') (acc.head - 1) :: acc
       else acc
     }.count(_ == 0) - 1
+
+  def matrixBlockSum(mat: Array[Array[Int]], K: Int): Array[Array[Int]] = {
+    val firstRow = mat.head
+    val (m, n) = (mat.length, firstRow.length)
+    val answer = Array.ofDim[Int](m, n)
+    for {
+      i <- mat.indices
+      j <- firstRow.indices
+      r = ((i - K) to (i + K)).dropWhile(_ < 0).takeWhile(_ < m)
+      c = ((j - K) to (j + K)).dropWhile(_ < 0).takeWhile(_ < n)
+      blockRows = mat.slice(r.start, r.end + 1)
+      blockSum = blockRows.foldLeft(0) { (sum, row) => sum + row.slice(c.start, c.end + 1).sum }
+    } yield answer(i)(j) = blockSum
+    answer
+  }
 }
