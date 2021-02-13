@@ -111,3 +111,45 @@ object LeetCode {
     answer
   }
 }
+
+object DataStructures {
+
+  def allEqual[T](list: List[T]): Boolean = list match {
+    case Nil => true
+    case x :: xs => xs.forall(_ == x)
+  }
+
+  val vegetableAmounts = Map(
+    "tomatoes" -> 17,
+    "peppers" -> 234,
+    "olives" -> 32,
+    "cucumbers" -> 323,
+  )
+  val vegetablePrices = Map(
+    "tomatoes" -> 4,
+    "peppers" -> 5,
+    "olives" -> 17,
+  )
+  val vegetableWeights = Map(
+    ("pumpkins", 10),
+    ("cucumbers", 20),
+    ("olives", 2),
+  )
+  val totalVegetableCost: Int = {
+    vegetableAmounts.foldLeft(0) { case (cost, (vege, units)) =>
+      cost + units * vegetablePrices.getOrElse(vege, 10)
+    }
+  }
+
+  val totalVegetableWeights: Map[String, Int] =
+    for {
+      (vege, units) <- vegetableAmounts
+      if vegetableWeights.contains(vege)
+    } yield vege -> units * vegetableWeights(vege)
+
+  def allSubsetsOfSizeN[A](set: Set[A], n: Int): Set[Set[A]] =
+    set.subsets(n).toSet
+
+  def sortConsideringEqualValues[T](map: Map[T, Int]): List[(Set[T], Int)] =
+    map.groupBy(_._2).view.mapValues(_.keySet).map { case (k, v) => (v, k) }.toList.sortBy(_._2)
+}
