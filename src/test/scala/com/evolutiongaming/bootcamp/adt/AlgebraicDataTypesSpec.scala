@@ -13,7 +13,7 @@ object AlgebraicDataTypesSpec extends AnyFlatSpec {
       Card(Rank.of('A').get, Suit.of('s').get),
       Card(Rank.of('Q').get, Suit.of('s').get)))
 
-    val hands = Set(
+    val hands = List(
       Hand.of(List(Card(Rank.of('K').get, Suit.of('s').get),
         Card(Rank.of('4').get, Suit.of('c').get))),
       Hand.of(List(Card(Rank.of('K').get, Suit.of('d').get),

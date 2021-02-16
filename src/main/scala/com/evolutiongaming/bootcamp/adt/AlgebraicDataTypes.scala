@@ -44,12 +44,15 @@ object AlgebraicDataTypes {
       else None
   }
 
-  final case class HighCard(cards: Set[Card]) {
+  sealed trait Combination {
+    val power: Int
+  }
+  final case class HighCard(cards: Set[Card]) extends Combination {
     val power = 1
     def value: Card =
       cards.maxBy { _.rank.power }
   }
-  final case class Pair(cards: Set[Card]) {
+  final case class Pair(cards: Set[Card]) extends Combination {
     val power = 2
     def value: Option[Set[Card]] = {
       val cardsByRank = cards.toList.groupBy(_.rank)
@@ -66,7 +69,7 @@ object AlgebraicDataTypes {
       }
     }
   }
-  final case class TwoPairs(cards: Set[Card]) {
+  final case class TwoPairs(cards: Set[Card]) extends Combination {
     val power = 3
     def value: Option[Set[Set[Card]]] = {
       val cardsByRank = cards.groupBy(_.rank)
@@ -78,12 +81,12 @@ object AlgebraicDataTypes {
       }
     }
   }
-  final case class ThreeOfKind(cards: Set[Card]) {
+  final case class ThreeOfKind(cards: Set[Card]) extends Combination {
     val power = 4
     def value: Option[Set[Card]] =
       cards.groupBy(_.rank).collectFirst { case (_, cs) if cs.size == 3 => cs }
   }
-  final case class Straight(cards: Set[Card]) {
+  final case class Straight(cards: Set[Card]) extends Combination {
     val power = 5
     def value: Option[Set[Card]] = {
       val weakestPowerStraight = List(1, 2, 3, 4, 13)
@@ -94,42 +97,66 @@ object AlgebraicDataTypes {
       Option.when(isStraight || sortedPowerRanks == weakestPowerStraight)(cards)
     }
   }
-  final case class Flush(cards: Set[Card]) {
+  final case class Flush(cards: Set[Card]) extends Combination {
     val power = 6
     def value: Option[Set[Card]] =
       Option.when(cards.map(_.suit).size == 1)(cards)
   }
-  final case class FullHouse(cards: Set[Card]) {
+  final case class FullHouse(cards: Set[Card]) extends Combination {
     val power = 7
     def value: Option[Set[Set[Card]]] = for {
         threeOfKind <- ThreeOfKind(cards).value
         pair        <- Pair(cards diff threeOfKind).value
       } yield Set(threeOfKind, pair)
   }
-  final case class FourOfKind(cards: Set[Card]) {
+  final case class FourOfKind(cards: Set[Card]) extends Combination {
     val power = 8
     def value: Option[Set[Card]] =
       cards.groupBy(_.rank).collectFirst { case (_, cs) if cs.size == 4 => cs }
   }
-  final case class StraightFlush(cards: Set[Card]) {
+  final case class StraightFlush(cards: Set[Card]) extends Combination {
     val power = 9
     def value: Option[Set[Card]] = for {
-      straight <- Straight(cards).value
-      flush    <- Flush(cards).value
+      _ <- Straight(cards).value
+      _    <- Flush(cards).value
     } yield Set(cards)
   }
-  final case class RoyalFlush(cards: Set[Card]) {
+  final case class RoyalFlush(cards: Set[Card]) extends Combination {
     val power = 10
     def value: Option[Set[Card]] = for {
       straight <- Straight(cards).value
       if straight.map(_.rank.power).min == 9
-      flush    <- Flush(cards).value
+      _        <- Flush(cards).value
     } yield Set(cards)
   }
 
-  def sortHands(hands: Set[Hand], board: Board): List[Hand] = {
-    val bestCombinations = for (hand <- hands) yield bestCombination(hand, board)
-    bestCombinations.sortBy
+  def bestCombination(hand: Hand, board: Board): Combination = {
+    // Many if-s ... it does not look good
+    def iterOverCombinations(cards: Set[Card]): Combination =
+      if (RoyalFlush(cards).value.nonEmpty) RoyalFlush(cards)
+      else if (StraightFlush(cards).value.nonEmpty) StraightFlush(cards)
+      else if (FourOfKind(cards).value.nonEmpty) FourOfKind(cards)
+      else if (FullHouse(cards).value.nonEmpty) FullHouse(cards)
+      else if (Flush(cards).value.nonEmpty) Flush(cards)
+      else if (Straight(cards).value.nonEmpty) Straight(cards)
+      else if (ThreeOfKind(cards).value.nonEmpty) ThreeOfKind(cards)
+      else if (TwoPairs(cards).value.nonEmpty) TwoPairs(cards)
+      else if (Pair(cards).value.nonEmpty) Pair(cards)
+      else HighCard(cards)
+
+    (for {
+      subsetFromBoard <- board.cards.subsets(5)
+      subsetFromHand  <- hand.cards.toSet.subsets(2)
+      subset <- (subsetFromBoard union subsetFromHand).subsets(5)
+    } yield iterOverCombinations(subset)).maxBy(_.power)
+  }
+
+  def sortHands(hands: List[Hand], board: Board): List[Hand] = {
+    val bestCombinations: Seq[(Hand, Combination)] = for (hand <- hands) yield hand -> bestCombination(hand, board)
+    def compare(comb1: Combination, comb2: Combination): Boolean = {
+      ???
+    }
+    bestCombinations.sortWith { case ((_, comb1), (_, comb2)) => compare(comb1, comb2) }.map(_._1).toList
   }
 
   def main(args: Array[String]): Unit = {
