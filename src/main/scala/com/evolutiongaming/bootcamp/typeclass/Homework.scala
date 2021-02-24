@@ -1,5 +1,7 @@
 package com.evolutiongaming.bootcamp.typeclass
 
+import scala.util.matching.Regex
+
 object TypeclassTask extends App {
 
   // Why am I not a Typeclass?
@@ -47,4 +49,52 @@ object Task2 extends App {
   println(User("1", "Oleg").show)
 }
 
+object Task3 extends App {
+  type Error = String
+  trait Parse[T] { // invent any format you want or it can be csv string
+    def parse(entity: String): Either[Error, T]
+  }
 
+  final case class User(id: String, name: String)
+
+
+  implicit val userParser: Parse[User] = str => {
+    val userReg: Regex = raw"User\{id=(\d+),\s*name=([a-zA-Z]+)\}".r
+    userReg.findFirstMatchIn(str) match {
+      case None => Left("The given user can't be parsed")
+      case Some(data) => Right(User(data.group(1), data.group(2)))
+    }
+  }
+
+  implicit class ParseSyntax(x: String) {
+    def parse[T](implicit parser: Parse[T]): Either[Error, T] = parser.parse(x)
+  }
+
+  // Unsuccessful case
+  println("lalala".parse[User])
+  // Successful case
+  println("User{id=375137625,     name=oLeG}".parse[User])
+}
+
+object Task4 extends App {
+  // TODO: design a typesafe equals so i can do a === b, but it won't compile if a and b are of different types
+  // define the typeclass (think of a method signature)
+  trait Equals[T] {
+    def === (x: T, y: T): Boolean
+  }
+
+  implicit class EqualsSyntax[T](x: T) {
+    def === (y: T): Boolean = x == y
+  }
+  import Task3.User
+  println(User("007", "JamesBond") === User("700", "BondJames"))
+  println(98 === 'b')
+  // println(1 === 1.0) -- won't compile
+  // remember `a method b` is `a.method(b)`
+}
+
+object AdvancedHomework {
+  trait Functor[F[_]] {
+    def flatMap[A, B](x: F[A])(f: A => F[B]): F[B]
+  }
+}
