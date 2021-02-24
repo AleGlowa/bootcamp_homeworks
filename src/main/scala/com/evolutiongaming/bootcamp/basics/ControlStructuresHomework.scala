@@ -57,7 +57,7 @@ object ControlStructuresHomework {
       case None => Left(ErrorMessage("Error: String argument can't be converted to Double"))
     }
     def toDoubles: Either[ErrorMessage, List[Double]] = {
-      val args = value.split(" ").toList
+      val args = value.split("\\s+").toList
       // In place of not parsable strings are empty sequences
       val seqs = args map (ChangeMe(_).toDouble.toSeq)
       if (seqs.exists(_.isEmpty)) Left(ErrorMessage("Error: String argument can't be converted to Double"))

@@ -12,11 +12,13 @@ class ControlStructuresHomeworkSpec extends AnyFlatSpec with ScalaCheckDrivenPro
     val cmd2 = " sum 2"
     val cmd3 = "divide 2"
     val cmd4 = "sum"
+    val cmd5 = "average  "
 
     parseCommand(cmd1) shouldEqual Left(ErrorMessage("Error: The command is not recognizable"))
     parseCommand(cmd2) shouldEqual Left(ErrorMessage("Error: The command is not recognizable"))
     parseCommand(cmd3) shouldEqual Left(ErrorMessage("Error: The command is not recognizable"))
     parseCommand(cmd4) shouldEqual Left(ErrorMessage("Error: The command is not recognizable"))
+    parseCommand(cmd5) shouldEqual Left(ErrorMessage("Error: The command is not recognizable"))
   }
 
   "parseCommand" should "print error message for not parsable arguments" in {
@@ -41,11 +43,13 @@ class ControlStructuresHomeworkSpec extends AnyFlatSpec with ScalaCheckDrivenPro
     val in3 = "average 4 3 8.5 4"
     val in4 = "min 4 -3 -17"
     val in5 = "max 4 -3 -17"
+    val in6 = "average 5"
 
     process(in1) shouldEqual "4.0 divided by 5.0 is 0.8"
     process(in2) shouldEqual "the sum of 5.0 5.0 6.0 8.5 is 24.5"
     process(in3) shouldEqual "the average of 4.0 3.0 8.5 4.0 is 4.875"
     process(in4) shouldEqual "the minimum of 4.0 -3.0 -17.0 is -17.0"
     process(in5) shouldEqual "the maximum of 4.0 -3.0 -17.0 is 4.0"
+    process(in6) shouldEqual "the average of 5.0 is 5.0"
   }
 }
