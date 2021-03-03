@@ -60,9 +60,11 @@ object ImplicitsHomework {
       private val map = mutable.LinkedHashMap.empty[K, V]
 
       def put(key: K, value: V): Unit = {
-        val (keyScore, valueScore) = (implicitly[GetSizeScore[K]], implicitly[GetSizeScore[V]])
-        val latestScore = keyScore(key) + valueScore(value)
-        val mapScore = map.foldLeft(0) { (s, x) => s + keyScore(x._1) + valueScore(x._2) }
+        lazy val (keyScore, valueScore) = (implicitly[GetSizeScore[K]], implicitly[GetSizeScore[V]])
+        def getScore(element: (K, V)): SizeScore = keyScore(element._1) + valueScore(element._2)
+
+        val latestScore = getScore((key, value))
+        val mapScore = map.foldLeft(0) { (s, x) => s + getScore(x) }
         val score = mapScore + latestScore
 
         @tailrec
@@ -70,7 +72,7 @@ object ImplicitsHomework {
           if (score > maxSizeScore) {
             val toDelete = map.head
             map -= toDelete._1
-            traverse(score - (keyScore(toDelete._1) + valueScore(toDelete._2)))
+            traverse(score - getScore(toDelete))
           }
           else map += ((key, value))
         }
@@ -135,26 +137,21 @@ object ImplicitsHomework {
       If you struggle with writing generic instances for Iterate and Iterate2, start by writing instances for
       List and other collections and then replace those with generic instances.
        */
+      val HeaderSize: Int = 12
       implicit val sizeScoreByte: GetSizeScore[Byte] = _ => 1
       implicit val sizeScoreChar: GetSizeScore[Char] = _ => 2
       implicit val sizeScoreInt: GetSizeScore[Int] = _ => 4
       implicit val sizeScoreLong: GetSizeScore[Long] = _ => 8
-      implicit val sizeScoreStr: GetSizeScore[String] = str => 12 + str.length * 2
+      implicit val sizeScoreStr: GetSizeScore[String] = str => HeaderSize + str.length * 2
 
+      implicit def sizeScoreIterable[T, F[_] <: Iterable[_]](implicit elScore: GetSizeScore[T], iterate: Iterate[F]): GetSizeScore[F[T]] =
+        seq => iterate.iterator(seq).foldLeft(HeaderSize) { _ + elScore(_) }
       implicit def sizeScoreArr[T](implicit elScore: GetSizeScore[T]): GetSizeScore[Array[T]] = arr =>
-        arrayIterate.iterator(arr).foldLeft(12) { _ + elScore(_) }
-      implicit def sizeScoreList[T](implicit elScore: GetSizeScore[T]): GetSizeScore[List[T]] = list =>
-        iterableOnceIterate.iterator(list).foldLeft(12) { _ + elScore(_) }
-      implicit def sizeScoreVector[T](implicit elScore: GetSizeScore[T]): GetSizeScore[Vector[T]] = vec =>
-        iterableOnceIterate.iterator(vec).foldLeft(12) { _ + elScore(_) }
+        arrayIterate.iterator(arr).foldLeft(HeaderSize) { _ + elScore(_) }
 
-      implicit def sizeScoreMap[K, V](implicit keyScore: GetSizeScore[K], valueScore: GetSizeScore[V]): GetSizeScore[Map[K, V]] =
-        originalMap => mapIterate.iterator1(originalMap).foldLeft(0) { _ + keyScore(_) } +
-          mapIterate.iterator2(originalMap).foldLeft(0) { _ + valueScore(_) } + 12
-
-      implicit def sizeScoreMultiMap[K, V](implicit keyScore: GetSizeScore[K], valueScore: GetSizeScore[V]): GetSizeScore[PackedMultiMap[K, V]] =
-        customMap => packedMultiMapIterate.iterator1(customMap).foldLeft(0) { _ + keyScore(_) } +
-          packedMultiMapIterate.iterator2(customMap).foldLeft(0) { _ + valueScore(_) } + 12
+      implicit def sizeScoreMap[K, V, F[_, _]](implicit keyScore: GetSizeScore[K], valueScore: GetSizeScore[V], iterate: Iterate2[F]): GetSizeScore[F[K, V]] =
+        map => iterate.iterator1(map).foldLeft(0) { _ + keyScore(_) } +
+          iterate.iterator2(map).foldLeft(0) { _ + valueScore(_) } + HeaderSize
     }
   }
 
@@ -191,14 +188,14 @@ object ImplicitsHomework {
     implicit val sizeScoreFbiNote: GetSizeScore[FbiNote] = fbiNote =>
       implicitly[GetSizeScore[String]].apply(fbiNote.month) +
         implicitly[GetSizeScore[Char]].apply(fbiNote.favouriteChar) +
-        implicitly[GetSizeScore[Long]].apply(fbiNote.watchedPewDiePieTimes) + 12
+        implicitly[GetSizeScore[Long]].apply(fbiNote.watchedPewDiePieTimes) + HeaderSize
 
     implicit val sizeScoreTwit: GetSizeScore[Twit] = twit =>
       implicitly[GetSizeScore[Long]].apply(twit.id) +
         implicitly[GetSizeScore[Int]].apply(twit.userId) +
-        implicitly[GetSizeScore[Vector[String]]].apply(twit.hashTags) +
+        implicitly[GetSizeScore[Iterable[String]]].apply(twit.hashTags) +
         implicitly[GetSizeScore[PackedMultiMap[String, String]]].apply(twit.attributes) +
-        implicitly[GetSizeScore[List[FbiNote]]].apply(twit.fbiNotes) + 12
+        implicitly[GetSizeScore[Iterable[FbiNote]]].apply(twit.fbiNotes) + HeaderSize
 
     def createTwitCache(maxSizeScore: SizeScore): TwitCache = new TwitCache {
       val cache = new MutableBoundedCache[Long, Twit](maxSizeScore)
