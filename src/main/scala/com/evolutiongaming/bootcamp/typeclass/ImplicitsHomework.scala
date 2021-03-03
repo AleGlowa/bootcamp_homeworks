@@ -62,17 +62,18 @@ object ImplicitsHomework {
       def put(key: K, value: V): Unit = {
         val (keyScore, valueScore) = (implicitly[GetSizeScore[K]], implicitly[GetSizeScore[V]])
         val latestScore = keyScore(key) + valueScore(value)
-        val mapScore = map.foldLeft(12) { (s, x) => s + keyScore(x._1) + valueScore(x._2) }
+        val mapScore = map.foldLeft(0) { (s, x) => s + keyScore(x._1) + valueScore(x._2) }
         val score = mapScore + latestScore
 
         @tailrec
         def traverse(score: SizeScore): Unit = {
           if (score > maxSizeScore) {
             val toDelete = map.head
-            map.drop(1)
+            //println(s"Removed $toDelete")
+            map -= toDelete._1
             traverse(score - (keyScore(toDelete._1) + valueScore(toDelete._2)))
           }
-          else map += (key, value)
+          else map += ((key, value))
         }
         traverse(score)
       }
@@ -139,7 +140,7 @@ object ImplicitsHomework {
       implicit val sizeScoreChar: GetSizeScore[Char] = _ => 2
       implicit val sizeScoreInt: GetSizeScore[Int] = _ => 4
       implicit val sizeScoreLong: GetSizeScore[Long] = _ => 8
-      implicit val sizeScoreStr: GetSizeScore[String] = str => 12 + str.length * sizeScoreChar
+      implicit val sizeScoreStr: GetSizeScore[String] = str => 12 + str.length * 2
 
       implicit def sizeScoreArr[T](implicit elScore: GetSizeScore[T]): GetSizeScore[Array[T]] = arr =>
         arrayIterate.iterator(arr).foldLeft(12) { _ + elScore(_) }
