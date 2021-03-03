@@ -29,19 +29,14 @@ class ImplicitsHomeworkSpec extends AnyFreeSpec with Matchers {
     "when not enough capacity should evict first inserted values" in {
       val cache = new MutableBoundedCache[TestValue, TestValue](maxSizeScore = 12)
 
-      println("Before puts")
       cache.put(val3, val3) //score +6
-      println("After 1st put")
       cache.put(val2, val2) //score +4
-      println("After 2nd put")
       cache.put(val1, val1) //score +2, total score 12
-      println("After 3rd put")
       cache.get(val3) shouldEqual Some(val3)
       cache.get(val2) shouldEqual Some(val2)
       cache.get(val1) shouldEqual Some(val1)
 
       cache.put(val4, val4) //score +8, first 2 should be evicted
-      println("After 4th put")
       cache.get(val3) shouldEqual None
       cache.get(val2) shouldEqual None
       cache.get(val1) shouldEqual Some(val1)

@@ -69,7 +69,6 @@ object ImplicitsHomework {
         def traverse(score: SizeScore): Unit = {
           if (score > maxSizeScore) {
             val toDelete = map.head
-            //println(s"Removed $toDelete")
             map -= toDelete._1
             traverse(score - (keyScore(toDelete._1) + valueScore(toDelete._2)))
           }
