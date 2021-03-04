@@ -93,8 +93,29 @@ object Task4 extends App {
   // remember `a method b` is `a.method(b)`
 }
 
-object AdvancedHomework {
-  trait Functor[F[_]] {
-    def flatMap[A, B](x: F[A])(f: A => F[B]): F[B]
+object AdvancedHomework extends App {
+  trait FlatMap[F[_]] {
+    def flatMap[A, B](x: F[A])(f: A => IterableOnce[B]): F[B]
   }
+  object FlatMap {
+    def apply[F[_] : FlatMap]: FlatMap[F] = implicitly[FlatMap[F]]
+  }
+  implicit class FlatMapOps[F[_] : FlatMap, A](x: F[A]) {
+    def flatMap[B](f: A => IterableOnce[B]): F[B] = FlatMap[F].flatMap(x)(f)
+  }
+
+  implicit val myListFunctor: FlatMap[MyList] = new FlatMap[MyList] {
+    def flatMap[A, B](x: MyList[A])(f: A => IterableOnce[B]): MyList[B] =
+      List(x.x: _*).flatMap(f).toMyList
+  }
+
+  // Artificial extension class for original `List`
+  implicit class ExtList[A](x: List[A]) {
+    def toMyList: MyList[A] = MyList(x: _*)
+  }
+  final case class MyList[+A](x: A*)
+
+  val res = MyList(1, 2, 3, 4, 5).flatMap(x => Set(x * math.Pi))
+
+  println(res)
 }
