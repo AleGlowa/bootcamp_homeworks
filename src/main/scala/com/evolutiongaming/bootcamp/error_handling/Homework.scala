@@ -137,7 +137,4 @@ object Homework extends App {
       digitSum(number, 0, 0) % 10 == 0
     }
   }
-  //import PaymentCardValidator.validate
-
-  //println(validate("Alex Glowacki", "4847352989263094", "8/3", "000"))
 }
