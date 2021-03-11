@@ -1,3 +1,7 @@
+/*
+Tests exist in src/test/error_handling
+*/
+
 package com.evolutiongaming.bootcamp.error_handling
 
 import cats.data.ValidatedNec
