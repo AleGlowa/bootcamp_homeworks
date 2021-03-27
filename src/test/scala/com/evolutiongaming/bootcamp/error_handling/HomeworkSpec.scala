@@ -11,16 +11,16 @@ class HomeworkSpec extends AnyFlatSpec with Matchers {
   "PaymentCardValidator" should "handle valid and invalid cards" in {
     import ValidationError._
 
-    PaymentCardValidator.validate(
+    PaymentCard.validate(
       name = "Alex Glowacki",
       number = "4847352989263094",
       expirationDate = "8/3",
       securityCode = "000"
-    ) shouldBe PaymentCard(User("Alex Glowacki"), CardNumber("4847352989263094"), CardExpDate("08/03"), CardSecCode("000")).validNec
+    ).isValid shouldBe true
 
     def checkInvalid(name: String, number: String, expirationDate: String, securityCode: String,
                      errors: Set[ValidationError]): Assertion =
-      PaymentCardValidator.validate(
+      PaymentCard.validate(
         name = name,
         number = number,
         expirationDate = expirationDate,
