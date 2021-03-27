@@ -14,7 +14,7 @@ import scala.annotation.tailrec
 // 1. Model `PaymentCard` class as an ADT (protect against invalid data as much as it makes sense).
 // 2. Add `ValidationError` cases (at least 5, may be more).
 // 3. Implement `validate` method to construct `PaymentCard` instance from the supplied raw data.
-object Homework extends App {
+object Homework {
 
   final case class User(name: String) extends AnyVal
   final case class CardNumber(number: String) extends AnyVal
@@ -24,7 +24,7 @@ object Homework extends App {
   }
   final case class CardSecCode(securityCode: String) extends AnyVal
 
-  final case class PaymentCard(owner: User, number: CardNumber, expirationDate: CardExpDate,
+  sealed abstract case class PaymentCard private (owner: User, number: CardNumber, expirationDate: CardExpDate,
                                securityCode: CardSecCode)
 
   sealed trait ValidationError
@@ -52,7 +52,7 @@ object Homework extends App {
     }
   }
 
-  object PaymentCardValidator {
+  object PaymentCard {
     import ValidationError._
 
     type AllErrorsOr[A] = ValidatedNec[ValidationError, A]
@@ -76,7 +76,8 @@ object Homework extends App {
         if (Algorithms.isValidCardNumber(number)) CardNumber(number).validNec
         else CardNumberIncorrect.invalidNec
 
-      validateCardNumberFormat.andThen(_ => validateCardNumberCorrectness)
+      validateCardNumberFormat andThen (_ => validateCardNumberCorrectness)
+      validateCardNumberFormat andThen (_ => validateCardNumberCorrectness)
     }
 
     private def validateCardExpDate(expirationDate: String): AllErrorsOr[CardExpDate] = {
@@ -101,7 +102,7 @@ object Homework extends App {
         else CardExpDateBounds.invalidNec
       }
 
-      validateCardExpDateFormat.andThen(_ => validateCardExpDateBounds)
+      validateCardExpDateFormat andThen (_ => validateCardExpDateBounds)
     }
 
     private def validateCardSecCode(securityCode: String): AllErrorsOr[CardSecCode] = {
@@ -113,14 +114,10 @@ object Homework extends App {
       validateCardSecCodeFormat
     }
 
-    def validate(
-                  name: String,
-                  number: String,
-                  expirationDate: String,
-                  securityCode: String,
-                ): AllErrorsOr[PaymentCard] =
+    def validate(name: String, number: String, expirationDate: String, securityCode: String): AllErrorsOr[PaymentCard] =
       (validateCardUser(name), validateCardNumber(number),
-        validateCardExpDate(expirationDate), validateCardSecCode(securityCode)).mapN(PaymentCard)
+        validateCardExpDate(expirationDate), validateCardSecCode(securityCode))
+        .mapN(new PaymentCard(_, _, _, _) {})
   }
 
   object Algorithms {
